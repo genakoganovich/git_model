@@ -49,3 +49,15 @@ def test_repository_add_commit():
 
     assert repo.head == commit
     assert len(repo.list_commits()) == 1
+
+from git_sim.model import GitSimulator
+
+
+def test_add_and_commit_flow():
+    git = GitSimulator()
+
+    git.working_dir.write("file.txt", "hello")
+    git.add("file.txt")
+    git.commit()
+
+    assert git.repo.head.snapshot == {"file.txt": "hello"}

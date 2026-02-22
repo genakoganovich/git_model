@@ -47,3 +47,20 @@ class Repository:
 
     def list_commits(self):
         return list(self._commits)
+
+class GitSimulator:
+    def __init__(self):
+        self.working_dir = WorkingDirectory()
+        self.index = Index()
+        self.repo = Repository()
+
+    def init(self):
+        self.repo = Repository()
+
+    def add(self, filename: str):
+        content = self.working_dir.read(filename)
+        self.index.add(filename, content)
+
+    def commit(self):
+        commit = Commit(self.index.list_files(), self.repo.head)
+        self.repo.add_commit(commit)
