@@ -55,3 +55,11 @@ class GitService:
                 staged.append(filename)
 
         return StatusResult(untracked, staged, modified)
+
+    def get_render_data(self):
+        wd = self.working_dir.snapshot()
+        index = self.index.snapshot()
+        head = self.repo.head.snapshot if self.repo.head else None
+        status = self.status()
+
+        return wd, index, head, status
