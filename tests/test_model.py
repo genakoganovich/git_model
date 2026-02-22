@@ -26,3 +26,14 @@ def test_index_add():
     index.add("file.txt", "data")
 
     assert index.list_files() == {"file.txt": "data"}
+
+from git_sim.model import Commit
+
+
+def test_commit_is_snapshot():
+    data = {"file.txt": "v1"}
+    commit = Commit(data)
+
+    data["file.txt"] = "v2"
+
+    assert commit.snapshot["file.txt"] == "v1"
