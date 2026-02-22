@@ -7,6 +7,14 @@ git.working_dir.write("a.txt", "1")
 git.add("a.txt")
 git.commit()
 
-wd, index, head, status = git.get_render_data()
+wd, index, head, status, event = git.get_render_data()
 
-print(AsciiRenderer.render_state(wd, index, head, status))
+print(
+    AsciiRenderer.render_state(
+        wd,
+        index,
+        head,
+        status,
+        event,
+    )
+)

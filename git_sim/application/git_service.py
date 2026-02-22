@@ -4,19 +4,33 @@ from git_sim.domain.commit import Commit
 from git_sim.domain.repository import Repository
 from git_sim.domain.exceptions import NothingToCommitError
 from git_sim.domain.status import StatusResult
+from git_sim.domain.events import GitEvent
 
 class GitService:
     def __init__(self):
         self.working_dir = WorkingDirectory()
         self.index = Index()
         self.repo = Repository()
+        self.last_event = None
 
     def init(self):
         self.repo = Repository()
+        self.last_event = GitEvent(
+            type="init",
+            source=None,
+            target="repository"
+        )
 
     def add(self, filename: str):
         content = self.working_dir.read(filename)
         self.index.add(filename, content)
+
+        self.last_event = GitEvent(
+            type="add",
+            source="working_dir",
+            target="index",
+            filename=filename
+        )
 
     def commit(self):
         snapshot = self.index.snapshot()
@@ -29,6 +43,12 @@ class GitService:
 
         commit = Commit(snapshot, self.repo.head)
         self.repo.add_commit(commit)
+
+        self.last_event = GitEvent(
+            type="commit",
+            source="index",
+            target="repository"
+        )
 
     def status(self):
         wd = self.working_dir.snapshot()
@@ -61,5 +81,7 @@ class GitService:
         index = self.index.snapshot()
         head = self.repo.head.snapshot if self.repo.head else None
         status = self.status()
+        event = self.last_event
 
-        return wd, index, head, status
+        return wd, index, head, status, event
+

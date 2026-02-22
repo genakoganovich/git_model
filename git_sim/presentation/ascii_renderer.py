@@ -1,11 +1,15 @@
-from git_sim.domain.status import StatusResult
-
-
 class AsciiRenderer:
-    @staticmethod
-    def render_state(wd: dict, index: dict, head: dict | None, status: StatusResult) -> str:
-        head = head or {}
 
+    @staticmethod
+    def render_state(
+        wd: dict,
+        index: dict,
+        head: dict | None,
+        status,
+        event=None,
+    ) -> str:
+
+        head = head or {}
         lines = []
 
         # Working Directory
@@ -24,7 +28,7 @@ class AsciiRenderer:
             lines.append(f"| {name}: {index[name]}")
         lines.append("")
 
-        # HEAD
+        # Repository
         lines.append("+---------------------+")
         lines.append("| Repository (HEAD)   |")
         lines.append("+---------------------+")
@@ -39,5 +43,12 @@ class AsciiRenderer:
         lines.append(f"| Untracked: {sorted(status.untracked)}")
         lines.append(f"| Staged: {sorted(status.staged)}")
         lines.append(f"| Modified: {sorted(status.modified)}")
+
+        # Event
+        if event:
+            lines.append("")
+            lines.append(f"EVENT: {event.type.upper()}")
+            if event.source and event.target:
+                lines.append(f"       {event.source} → {event.target}")
 
         return "\n".join(lines)
