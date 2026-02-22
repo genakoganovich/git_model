@@ -35,3 +35,15 @@ class Commit:
         self.id = str(uuid.uuid4())
         self.snapshot = deepcopy(snapshot)
         self.parent = parent
+
+class Repository:
+    def __init__(self):
+        self._commits = []
+        self.head = None
+
+    def add_commit(self, commit: Commit):
+        self._commits.append(commit)
+        self.head = commit
+
+    def list_commits(self):
+        return list(self._commits)

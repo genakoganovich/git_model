@@ -37,3 +37,15 @@ def test_commit_is_snapshot():
     data["file.txt"] = "v2"
 
     assert commit.snapshot["file.txt"] == "v1"
+
+from git_sim.model import Repository, Commit
+
+
+def test_repository_add_commit():
+    repo = Repository()
+    commit = Commit({"a.txt": "1"})
+
+    repo.add_commit(commit)
+
+    assert repo.head == commit
+    assert len(repo.list_commits()) == 1
