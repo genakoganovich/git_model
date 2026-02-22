@@ -12,3 +12,16 @@ class WorkingDirectory:
 
     def list_files(self):
         return dict(self._files)
+
+class Index:
+    def __init__(self):
+        self._files = {}
+
+    def add(self, filename: str, content: str):
+        self._files[filename] = content
+
+    def list_files(self):
+        return dict(self._files)
+
+    def clear(self):
+        self._files.clear()

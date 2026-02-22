@@ -17,3 +17,12 @@ def test_list_files():
 
     files = wd.list_files()
     assert files == {"a.txt": "1", "b.txt": "2"}
+
+from git_sim.model import Index
+
+
+def test_index_add():
+    index = Index()
+    index.add("file.txt", "data")
+
+    assert index.list_files() == {"file.txt": "data"}
