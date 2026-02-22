@@ -1,0 +1,2 @@
+class NothingToCommitError(Exception):
+    pass
