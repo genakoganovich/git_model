@@ -1,4 +1,5 @@
 from git_sim.application.git_service import GitService
+from git_sim.domain.exceptions import NothingToCommitError
 
 
 def test_full_flow():
@@ -54,3 +55,30 @@ def test_branch_and_checkout_keep_branch_heads_independent():
     assert branches["main"] is main_head
     assert branches["feature"] is git.repo.head
     assert branches["feature"] is not branches["main"]
+
+
+def test_checkout_resets_index_and_working_tree_to_branch_head():
+    git = GitService()
+
+    git.working_dir.write("a.txt", "main")
+    git.add("a.txt")
+    git.commit()
+
+    git.branch("feature")
+    git.checkout("feature")
+    git.working_dir.write("a.txt", "feature")
+    git.add("a.txt")
+    git.commit()
+
+    git.checkout("main")
+
+    assert git.index.snapshot() == {"a.txt": "main"}
+    assert git.working_dir.snapshot() == {"a.txt": "main"}
+    assert git.status().staged == []
+
+    try:
+        git.commit()
+    except NothingToCommitError:
+        pass
+    else:
+        raise AssertionError("checkout should not leave staged changes on target branch")

@@ -63,6 +63,15 @@ class GitService:
     def checkout(self, name: str):
         self.repo.checkout(name)
 
+        branch_head = self.repo.head
+        branch_snapshot = branch_head.snapshot if branch_head else {}
+
+        self.index = Index()
+        self.working_dir = WorkingDirectory()
+        for filename, content in branch_snapshot.items():
+            self.index.add(filename, content)
+            self.working_dir.write(filename, content)
+
         self.last_event = GitEvent(
             type="checkout",
             source="repository",
