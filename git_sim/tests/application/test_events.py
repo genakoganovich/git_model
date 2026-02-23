@@ -1,3 +1,4 @@
+from git_sim.application.events import GitEvent
 from git_sim.application.git_service import GitService
 
 
@@ -49,3 +50,17 @@ def test_checkout_generates_event():
     assert event.source == "repository"
     assert event.target == "repository"
     assert event.filename == "feature"
+
+
+def test_event_factories_produce_expected_payloads():
+    assert GitEvent.init() == GitEvent(type="init", source=None, target="repository")
+    assert GitEvent.add("a.txt") == GitEvent(
+        type="add", source="working_dir", target="index", filename="a.txt"
+    )
+    assert GitEvent.commit() == GitEvent(type="commit", source="index", target="repository")
+    assert GitEvent.branch("feature") == GitEvent(
+        type="branch", source="repository", target="repository", filename="feature"
+    )
+    assert GitEvent.checkout("feature") == GitEvent(
+        type="checkout", source="repository", target="repository", filename="feature"
+    )
