@@ -29,4 +29,11 @@ def test_multiple_commits_update_head():
     repo.add_commit(c2)
 
     assert repo.head is c2
-    assert repo.list_commits() == [c1, c2]
+
+    commits = repo.list_commits()
+    # HEAD должен быть первый
+    assert commits[0] is c2
+    # parent от HEAD
+    assert commits[1] is c1
+    # в конце списка нет лишних коммитов
+    assert len(commits) == 2

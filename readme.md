@@ -1,145 +1,54 @@
-1️⃣ Концептуальная модель Git (что именно визуализировать)
-Рабочая директория (Working Directory)
+📦 PROJECT CONTEXT — Git Simulation (Python)
+🎯 Цель проекта
+Создать учебную симуляцию Git, чтобы:
+* глубоко понять внутреннюю модель Git
+* визуализировать состояние:
+  * Working Directory
+  * Index (Staging Area)
+  * Repository
+* отображать изменения после команд:
+  * git init
+  * git add
+  * git commit
+* позже — добавить ветки, checkout, merge
+* рендерить состояние в ASCII
+Проект ориентирован на понимание Git как DAG-модели, а не как набора CLI-команд.
 
-Git — это три состояния данных (three trees model):
+🏗 Архитектура проекта
+Проект разделён по принципу Domain / Application.
 
-| Компонент            | Что это                             | Где живёт        |
-|----------------------|-------------------------------------|------------------|
-| Working Directory    | обычные файлы на диске              | файловая система |
-| Index (Staging Area) | снимок, который готовится к коммиту | .git/index       |
-| Repository           | история коммитов (объекты)          | .git/objects     |
+`git_simulator/
+│
+├── domain/
+│   ├── working_directory.py
+│   ├── index.py
+│   ├── commit.py
+│   └── repository.py
+│
+├── application/
+│   └── git_service.py
+│
+├── rendering/
+│   └── ascii_renderer.py
+│
+└── tests/`
 
-Твоя симуляция должна отражать переходы состояния между этими тремя сущностями.
+🧠 Domain Model (текущее состояние)
+1️⃣ WorkingDirectory
+* хранит файлы как dict[str, str]
+* операции:
+  * create_file(name, content)
+  * modify_file(name, content)
+  * delete_file(name)
+  * list_files()
+Это просто модель файловой системы.
 
-2️⃣ Минимальный функционал (первая версия)
-Команды для реализации
-git init
-* создаётся .git
-* создаётся пустой repository
-* индекс пустой
+2️⃣ Index
 
-Визуально:
-```
-Working Dir:  [ files ]
-Index:        [ empty ]
-Repository:   [ empty ]
-```
-
-git add file.txt
-
-Что происходит:
-* содержимое файла копируется в Index
-* если файл изменится после add → index не меняется
-
-Визуально:
-```
-Working Dir:  file.txt (v2)
-Index:        file.txt (v1 snapshot)
-Repository:   empty
-```
-
-Важно: индекс — это снимок, а не ссылка.
-
-git commit
-Что происходит:
-* создаётся commit object
-* commit указывает на tree
-* tree указывает на blobs
-* HEAD двигается
-
-В упрощённой модели:
-```
-Repository:
-Commit #1
-└── file.txt (v1)
-```
-
-Index очищается?
-Нет. Он остаётся, но совпадает с HEAD.
-
-3️⃣ Архитектура симулятора
-Ты можешь реализовать это как чистую модель + визуализатор.
-
-🧠 Model layer
-
-```
-class WorkingDirectory:
-    files: dict[str, str]  # filename -> content
-
-
-class Index:
-    files: dict[str, str]
-
-
-class Commit:
-    id: str
-    snapshot: dict[str, str]
-    parent: Optional["Commit"]
-
-
-class Repository:
-    commits: list[Commit]
-    head: Optional[Commit]
-```
-
-🛠 Git Engine
-
-```
-class GitSimulator:
-    def init(self): ...
-    def add(self, filename): ...
-    def commit(self, message): ...
-```
-
-4️⃣ Визуализация
-🔹 Консольная ASCII-визуализация (быстро)
-Для первого этапа:
-```
-+-------------------+
-| Working Directory |
-| file.txt (v2)     |
-+-------------------+
-
-+-------------------+
-| Index             |
-| file.txt (v1)     |
-+-------------------+
-
-+-------------------+
-| Repository        |
-| commit 1          |
-+-------------------+
-```
-
-🔷 Как устроен настоящий Git
-📦 Объектная модель Git
-
-Git хранит всё как объекты:
-
-1️⃣ Blob
-* хранит содержимое файла
-* это просто "байты файла"
-* blob НЕ знает имя файла
-
-2️⃣ Tree
-
-* структура каталогов
-* хранит:
-  * имя файла
-  * ссылку на blob
-  * права доступа
-* tree указывает на blobs и другие trees
-
-3️⃣ Commit
-* указывает на один tree
-* указывает на родительский commit
-* содержит метаданные (author, date, message)
-
-Что происходит при git commit
-1. Git берёт содержимое Index
-2. Создаёт blob для каждого файла
-3. Создаёт tree, который указывает на эти blobs
-4. Создаёт commit, который указывает на tree
-5. HEAD начинает указывать на новый commit
-
-Это полноценный DAG объектов.
+хранит staged файлы
+* операции:
+  * add(filename, content)
+  * clear()
+  * snapshot()
+  
+Index — это staging area.
