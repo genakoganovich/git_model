@@ -15,22 +15,13 @@ class GitService:
 
     def init(self):
         self.repo = Repository()
-        self.last_event = GitEvent(
-            type="init",
-            source=None,
-            target="repository"
-        )
+        self.last_event = GitEvent.init()
 
     def add(self, filename: str):
         content = self.working_dir.read(filename)
         self.index.add(filename, content)
 
-        self.last_event = GitEvent(
-            type="add",
-            source="working_dir",
-            target="index",
-            filename=filename
-        )
+        self.last_event = GitEvent.add(filename)
 
     def commit(self):
         snapshot = self.index.snapshot()
@@ -44,24 +35,24 @@ class GitService:
         commit = Commit(snapshot, self.repo.head)
         self.repo.add_commit(commit)
 
-        self.last_event = GitEvent(
-            type="commit",
-            source="index",
-            target="repository"
-        )
+        self.last_event = GitEvent.commit()
 
     def branch(self, name: str):
         self.repo.create_branch(name)
 
-        self.last_event = GitEvent(
-            type="branch",
-            source="repository",
-            target="repository",
-            filename=name,
-        )
+        self.last_event = GitEvent.branch(name)
 
     def checkout(self, name: str):
         self.repo.checkout(name)
+
+        branch_head = self.repo.head
+        branch_snapshot = branch_head.snapshot if branch_head else {}
+
+        self.index = Index()
+        self.working_dir = WorkingDirectory()
+        for filename, content in branch_snapshot.items():
+            self.index.add(filename, content)
+            self.working_dir.write(filename, content)
 
         self.last_event = GitEvent(
             type="checkout",
