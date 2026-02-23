@@ -4,7 +4,7 @@ from git_sim.domain.commit import Commit
 from git_sim.domain.repository import Repository
 from git_sim.domain.exceptions import NothingToCommitError
 from git_sim.domain.status import StatusResult
-from git_sim.domain.events import GitEvent
+from git_sim.application.events import GitEvent
 
 class GitService:
     def __init__(self):
