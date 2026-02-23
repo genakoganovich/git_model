@@ -54,7 +54,12 @@ class GitService:
             self.index.add(filename, content)
             self.working_dir.write(filename, content)
 
-        self.last_event = GitEvent.checkout(name)
+        self.last_event = GitEvent(
+            type="checkout",
+            source="repository",
+            target="repository",
+            filename=name,
+        )
 
     def status(self):
         wd = self.working_dir.snapshot()
