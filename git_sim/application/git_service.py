@@ -50,6 +50,26 @@ class GitService:
             target="repository"
         )
 
+    def branch(self, name: str):
+        self.repo.create_branch(name)
+
+        self.last_event = GitEvent(
+            type="branch",
+            source="repository",
+            target="repository",
+            filename=name,
+        )
+
+    def checkout(self, name: str):
+        self.repo.checkout(name)
+
+        self.last_event = GitEvent(
+            type="checkout",
+            source="repository",
+            target="repository",
+            filename=name,
+        )
+
     def status(self):
         wd = self.working_dir.snapshot()
         index = self.index.snapshot()
@@ -84,4 +104,3 @@ class GitService:
         event = self.last_event
 
         return wd, index, head, status, event
-
