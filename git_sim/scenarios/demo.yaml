@@ -1,0 +1,21 @@
+commands:
+  - cmd: init
+
+  - cmd: write
+    filename: a.txt
+    content: "main-v1"
+  - cmd: add
+    filename: a.txt
+  - cmd: commit
+
+  - cmd: branch
+    name: feature
+  - cmd: checkout
+    name: feature
+
+  - cmd: write
+    filename: a.txt
+    content: "feature-v2"
+  - cmd: add
+    filename: a.txt
+  - cmd: commit

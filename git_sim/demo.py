@@ -1,11 +1,11 @@
-from git_sim.application.git_service import GitService
+from pathlib import Path
+
+from git_sim.application.yaml_player import YamlCommandPlayer
 from git_sim.presentation.ascii_renderer import AsciiRenderer
 
-git = GitService()
-
-git.working_dir.write("a.txt", "1")
-git.add("a.txt")
-git.commit()
+scenario_path = Path(__file__).parent / "scenarios" / "demo.yaml"
+player = YamlCommandPlayer()
+git = player.play_file(scenario_path)
 
 wd, index, head, status, event = git.get_render_data()
 
