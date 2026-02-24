@@ -3,7 +3,9 @@ from __future__ import annotations
 import tkinter as tk
 
 from git_sim.application.scenario_stepper import TimelineNavigator
-from git_sim.presentation.dag_renderer import DagRenderer
+from git_sim.presentation.graph_layout import GraphLayout
+from git_sim.presentation.canvas_dag_renderer import CanvasDagRenderer
+from git_sim.presentation.snapshot_graph_mapper import map_snapshot_to_graph
 
 
 class GitSimWindow:
@@ -12,10 +14,13 @@ class GitSimWindow:
         self.navigator = navigator
         self.root.title("Git Simulation")
 
+        self.graph_layout = GraphLayout()
+        self.dag_canvas: tk.Canvas | None = None
+        self.canvas_renderer: CanvasDagRenderer | None = None
+
         self.wd_text: tk.Text
         self.index_text: tk.Text
         self.repo_text: tk.Text
-        self.dag_text: tk.Text
         self.commands_list: tk.Listbox
 
         self._build_layout()
@@ -45,7 +50,13 @@ class GitSimWindow:
         self.wd_text = self._make_text_panel(top, "Working Directory", 0, 0)
         self.index_text = self._make_text_panel(top, "Index", 0, 1)
         self.repo_text = self._make_text_panel(top, "Repository", 0, 2)
-        self.dag_text = self._make_text_panel(bottom, "DAG", 0, 0)
+
+        dag_frame = tk.LabelFrame(bottom, text="DAG")
+        dag_frame.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
+        self.dag_canvas = tk.Canvas(dag_frame, bg="white")
+        self.dag_canvas.pack(fill="both", expand=True)
+        self.canvas_renderer = CanvasDagRenderer(self.dag_canvas)
+
         self.commands_list = self._make_list_panel(bottom, "Scenario Commands", 0, 1)
 
     def _make_text_panel(self, parent: tk.Widget, title: str, row: int, col: int) -> tk.Text:
@@ -82,7 +93,6 @@ class GitSimWindow:
     def _sync_selection(self) -> None:
         if not self.navigator.snapshots:
             return
-
         self.commands_list.selection_clear(0, tk.END)
         self.commands_list.selection_set(self.navigator.index)
         self.commands_list.activate(self.navigator.index)
@@ -111,7 +121,6 @@ class GitSimWindow:
             self._set_text(self.wd_text, "")
             self._set_text(self.index_text, "")
             self._set_text(self.repo_text, "")
-            self._set_text(self.dag_text, "")
             return
 
         self._set_text(self.wd_text, _format_mapping(snap.wd))
@@ -127,14 +136,11 @@ class GitSimWindow:
                 event_type=snap.event_type,
             ),
         )
-        self._set_text(
-            self.dag_text,
-            DagRenderer.render(
-                current_branch=snap.current_branch,
-                branch_heads=snap.branch_heads,
-                commit_nodes=snap.commit_nodes,
-            ),
-        )
+
+        nodes, edges = map_snapshot_to_graph(snap)
+        coords = self.graph_layout.compute(nodes, edges)
+        if self.canvas_renderer is not None:
+            self.canvas_renderer.draw(nodes, edges, coords)
 
     @staticmethod
     def _set_text(widget: tk.Text, text: str) -> None:
@@ -147,7 +153,6 @@ class GitSimWindow:
 def _format_mapping(data: dict[str, str]) -> str:
     if not data:
         return "(empty)"
-
     lines = []
     for name in sorted(data):
         lines.append(f"{name}: {data[name]}")
