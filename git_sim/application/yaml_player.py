@@ -26,11 +26,11 @@ class YamlCommandPlayer:
             raise ValueError("YAML must contain 'commands' list")
 
         for item in commands:
-            self._run_command(item)
+            self.run_command(item)
 
         return self.git
 
-    def _run_command(self, item: dict[str, Any]) -> None:
+    def run_command(self, item: dict[str, Any]) -> None:
         if not isinstance(item, dict):
             raise ValueError("Each command must be a mapping")
 
