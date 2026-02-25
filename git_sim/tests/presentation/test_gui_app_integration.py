@@ -40,3 +40,25 @@ def test_gui_window_refresh_renders_dag_and_panels() -> None:
         assert len(window.dag_canvas.find_all()) > 0
     finally:
         root.destroy()
+
+
+def test_scenario_commands_down_moves_exactly_one_step() -> None:
+    scenario = Path(__file__).parents[2] / "scenarios" / "demo.yaml"
+    stepper = ScenarioStepper.from_file(scenario)
+    navigator = TimelineNavigator(stepper.snapshots)
+
+    root = _make_root_or_skip()
+    try:
+        window = GitSimWindow(root, navigator)
+
+        assert navigator.index == 0
+
+        # In withdrawn/headless Tk sessions, key events may not be delivered
+        # to Listbox due to focus handling. Call the handler directly to verify
+        # single-step navigation contract.
+        window._on_down(tk.Event())
+
+        assert navigator.index == 1
+        assert window.commands_list.curselection() == (1,)
+    finally:
+        root.destroy()

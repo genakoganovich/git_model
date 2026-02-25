@@ -21,6 +21,8 @@ class GitSimWindow:
         self.wd_text: tk.Text
         self.index_text: tk.Text
         self.repo_text: tk.Text
+        self.status_text: tk.Text
+        self.diff_text: tk.Text
         self.commands_list: tk.Listbox
 
         self._build_layout()
@@ -39,6 +41,8 @@ class GitSimWindow:
         top.columnconfigure(0, weight=1)
         top.columnconfigure(1, weight=1)
         top.columnconfigure(2, weight=1)
+        top.columnconfigure(3, weight=1)
+        top.columnconfigure(4, weight=2)
         top.rowconfigure(0, weight=1)
 
         bottom = tk.Frame(self.root)
@@ -50,6 +54,8 @@ class GitSimWindow:
         self.wd_text = self._make_text_panel(top, "Working Directory", 0, 0)
         self.index_text = self._make_text_panel(top, "Index", 0, 1)
         self.repo_text = self._make_text_panel(top, "Repository", 0, 2)
+        self.status_text = self._make_text_panel(top, "Status", 0, 3)
+        self.diff_text = self._make_text_panel(top, "Diff", 0, 4)
 
         dag_frame = tk.LabelFrame(bottom, text="DAG")
         dag_frame.grid(row=0, column=0, sticky="nsew", padx=4, pady=4)
@@ -83,6 +89,11 @@ class GitSimWindow:
     def _bind_events(self) -> None:
         self.root.bind("<Up>", self._on_up)
         self.root.bind("<Down>", self._on_down)
+
+        # Intercept arrows at widget level to avoid double step from
+        # Listbox class default navigation + our Timeline navigation.
+        self.commands_list.bind("<Up>", self._on_up)
+        self.commands_list.bind("<Down>", self._on_down)
         self.commands_list.bind("<<ListboxSelect>>", self._on_select)
 
     def _fill_commands(self) -> None:
@@ -98,15 +109,17 @@ class GitSimWindow:
         self.commands_list.activate(self.navigator.index)
         self.commands_list.see(self.navigator.index)
 
-    def _on_up(self, _event: tk.Event) -> None:
+    def _on_up(self, _event: tk.Event) -> str:
         self.navigator.move_up()
         self._sync_selection()
         self._refresh()
+        return "break"
 
-    def _on_down(self, _event: tk.Event) -> None:
+    def _on_down(self, _event: tk.Event) -> str:
         self.navigator.move_down()
         self._sync_selection()
         self._refresh()
+        return "break"
 
     def _on_select(self, _event: tk.Event) -> None:
         selection = self.commands_list.curselection()
@@ -121,6 +134,8 @@ class GitSimWindow:
             self._set_text(self.wd_text, "")
             self._set_text(self.index_text, "")
             self._set_text(self.repo_text, "")
+            self._set_text(self.status_text, "")
+            self._set_text(self.diff_text, "")
             return
 
         self._set_text(self.wd_text, _format_mapping(snap.wd))
@@ -130,11 +145,20 @@ class GitSimWindow:
             _format_repository_text(
                 current_branch=snap.current_branch,
                 head=snap.head,
+                event_type=snap.event_type,
+            ),
+        )
+        self._set_text(
+            self.status_text,
+            _format_status_text(
                 untracked=snap.status_untracked,
                 staged=snap.status_staged,
                 modified=snap.status_modified,
-                event_type=snap.event_type,
             ),
+        )
+        self._set_text(
+            self.diff_text,
+            _build_diff_text(head=snap.head, index=snap.index, wd=snap.wd),
         )
 
         nodes, edges = map_snapshot_to_graph(snap)
@@ -162,20 +186,58 @@ def _format_mapping(data: dict[str, str]) -> str:
 def _format_repository_text(
     current_branch: str,
     head: dict[str, str],
-    untracked: list[str],
-    staged: list[str],
-    modified: list[str],
     event_type: str | None,
 ) -> str:
     lines = [f"branch: {current_branch}", ""]
     lines.append("HEAD snapshot:")
     lines.append(_format_mapping(head))
     lines.append("")
+    lines.append(f"event: {event_type or '-'}")
+    return "\n".join(lines)
+
+
+def _format_status_text(
+    untracked: list[str],
+    staged: list[str],
+    modified: list[str],
+) -> str:
+    lines = ["Status:", ""]
     lines.append(f"untracked: {sorted(untracked)}")
     lines.append(f"staged: {sorted(staged)}")
     lines.append(f"modified: {sorted(modified)}")
-    lines.append(f"event: {event_type or '-'}")
     return "\n".join(lines)
+
+
+def _build_diff_text(head: dict[str, str], index: dict[str, str], wd: dict[str, str]) -> str:
+    lines = ["HEAD -> INDEX", ""]
+    lines.extend(_build_pair_diff(old=head, new=index))
+    lines.append("")
+    lines.append("INDEX -> WD")
+    lines.append("")
+    lines.extend(_build_pair_diff(old=index, new=wd))
+    return "\n".join(lines)
+
+
+def _build_pair_diff(old: dict[str, str], new: dict[str, str]) -> list[str]:
+    added = sorted(name for name in new if name not in old)
+    deleted = sorted(name for name in old if name not in new)
+    modified = sorted(name for name in old if name in new and old[name] != new[name])
+
+    lines: list[str] = []
+
+    for name in added:
+        lines.append(f"A {name}")
+    for name in deleted:
+        lines.append(f"D {name}")
+    for name in modified:
+        lines.append(f"M {name}")
+        lines.append(f"- {old[name]}")
+        lines.append(f"+ {new[name]}")
+
+    if not lines:
+        lines.append("(no changes)")
+
+    return lines
 
 
 def _format_command(command: dict[str, object]) -> str:
