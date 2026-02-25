@@ -29,6 +29,8 @@ class ScenarioSnapshot:
     status_staged: list[str]
     status_modified: list[str]
     event_type: str | None
+    log_lines: list[str]
+    show_snapshot: dict[str, str]
 
 
 @dataclass(frozen=True)
@@ -120,6 +122,8 @@ def _build_snapshot(
         status_staged=list(status.staged),
         status_modified=list(status.modified),
         event_type=(event.type if event else None),
+        log_lines=list(git.last_log),
+        show_snapshot=dict(git.last_show),
     )
 
 

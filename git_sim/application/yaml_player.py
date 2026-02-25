@@ -67,6 +67,17 @@ class YamlCommandPlayer:
             self.git.checkout(name)
             return
 
+        if cmd == "log":
+            self.git.log()
+            return
+
+        if cmd == "show":
+            ref = item.get("ref", "HEAD")
+            if not isinstance(ref, str):
+                raise ValueError("Command 'show' requires string field 'ref'")
+            self.git.show(ref)
+            return
+
         raise ValueError(f"Unknown command: {cmd}")
 
 

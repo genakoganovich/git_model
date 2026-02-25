@@ -62,3 +62,30 @@ def test_scenario_commands_down_moves_exactly_one_step() -> None:
         assert window.commands_list.curselection() == (1,)
     finally:
         root.destroy()
+
+
+def test_repository_panel_renders_log_and_show_sections() -> None:
+    stepper = ScenarioStepper.from_payload(
+        {
+            "commands": [
+                {"cmd": "write", "filename": "a.txt", "content": "1"},
+                {"cmd": "add", "filename": "a.txt"},
+                {"cmd": "commit"},
+                {"cmd": "log"},
+                {"cmd": "show", "ref": "HEAD"},
+            ]
+        }
+    )
+    navigator = TimelineNavigator(stepper.snapshots)
+    navigator.set_index(4)
+
+    root = _make_root_or_skip()
+    try:
+        window = GitSimWindow(root, navigator)
+        repo_text = window.repo_text.get("1.0", "end-1c")
+
+        assert "log:" in repo_text
+        assert "show:" in repo_text
+        assert "a.txt: 1" in repo_text
+    finally:
+        root.destroy()

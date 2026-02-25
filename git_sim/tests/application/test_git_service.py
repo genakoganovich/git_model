@@ -82,3 +82,61 @@ def test_checkout_resets_index_and_working_tree_to_branch_head():
         pass
     else:
         raise AssertionError("checkout should not leave staged changes on target branch")
+
+
+def test_log_returns_commits_from_head_to_root():
+    git = GitService()
+
+    git.working_dir.write("a.txt", "1")
+    git.add("a.txt")
+    git.commit()
+    first = git.repo.head.id
+
+    git.working_dir.write("a.txt", "2")
+    git.add("a.txt")
+    git.commit()
+    second = git.repo.head.id
+
+    output = git.log()
+
+    assert output == [f"commit {second}", f"commit {first}"]
+    assert git.last_log == output
+
+
+def test_show_head_returns_head_snapshot():
+    git = GitService()
+    git.working_dir.write("a.txt", "1")
+    git.add("a.txt")
+    git.commit()
+
+    snap = git.show("HEAD")
+
+    assert snap == {"a.txt": "1"}
+    assert git.last_show == {"a.txt": "1"}
+
+
+def test_show_branch_ref_returns_branch_head_snapshot():
+    git = GitService()
+    git.working_dir.write("a.txt", "main")
+    git.add("a.txt")
+    git.commit()
+    git.branch("feature")
+    git.checkout("feature")
+    git.working_dir.write("a.txt", "feature")
+    git.add("a.txt")
+    git.commit()
+
+    snap = git.show("main")
+
+    assert snap == {"a.txt": "main"}
+
+
+def test_show_raises_for_unknown_ref():
+    git = GitService()
+
+    try:
+        git.show("missing")
+    except ValueError as exc:
+        assert "Unknown ref" in str(exc)
+    else:
+        raise AssertionError("show should fail for unknown ref")

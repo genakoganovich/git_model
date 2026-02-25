@@ -4,7 +4,7 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class GitEvent:
-    type: str              # "init" | "add" | "commit" | "branch" | "checkout"
+    type: str              # "init" | "add" | "commit" | "branch" | "checkout" | "log" | "show"
     source: Optional[str]  # "working_dir" | "index" | "repository" | None
     target: Optional[str]  # "index" | "repository" | None
     filename: Optional[str] = None
@@ -28,3 +28,11 @@ class GitEvent:
     @classmethod
     def checkout(cls, name: str):
         return cls(type="checkout", source="repository", target="repository", filename=name)
+
+    @classmethod
+    def log(cls):
+        return cls(type="log", source="repository", target="repository")
+
+    @classmethod
+    def show(cls, ref: str):
+        return cls(type="show", source="repository", target="repository", filename=ref)

@@ -64,3 +64,28 @@ def test_event_factories_produce_expected_payloads():
     assert GitEvent.checkout("feature") == GitEvent(
         type="checkout", source="repository", target="repository", filename="feature"
     )
+    assert GitEvent.log() == GitEvent(type="log", source="repository", target="repository")
+    assert GitEvent.show("HEAD") == GitEvent(
+        type="show", source="repository", target="repository", filename="HEAD"
+    )
+
+
+def test_log_generates_event():
+    git = GitService()
+    git.log()
+
+    event = git.last_event
+    assert event.type == "log"
+    assert event.source == "repository"
+    assert event.target == "repository"
+
+
+def test_show_generates_event():
+    git = GitService()
+    git.show("HEAD")
+
+    event = git.last_event
+    assert event.type == "show"
+    assert event.source == "repository"
+    assert event.target == "repository"
+    assert event.filename == "HEAD"

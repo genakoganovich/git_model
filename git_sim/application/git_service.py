@@ -12,10 +12,14 @@ class GitService:
         self.index = Index()
         self.repo = Repository()
         self.last_event = None
+        self.last_log = []
+        self.last_show = {}
 
     def init(self):
         self.repo = Repository()
         self.last_event = GitEvent.init()
+        self.last_log = []
+        self.last_show = {}
 
     def add(self, filename: str):
         content = self.working_dir.read(filename)
@@ -55,6 +59,20 @@ class GitService:
             self.working_dir.write(filename, content)
         self.last_event = GitEvent.checkout(name)
 
+    def log(self) -> list[str]:
+        commits = self.repo.list_commits()
+        lines = [f"commit {commit.id}" for commit in commits]
+        self.last_log = lines
+        self.last_event = GitEvent.log()
+        return list(lines)
+
+    def show(self, ref: str = "HEAD") -> dict[str, str]:
+        commit = self._resolve_ref(ref)
+        snapshot = dict(commit.snapshot) if commit is not None else {}
+        self.last_show = snapshot
+        self.last_event = GitEvent.show(ref)
+        return dict(snapshot)
+
     def status(self):
         wd = self.working_dir.snapshot()
         index = self.index.snapshot()
@@ -89,3 +107,13 @@ class GitService:
         event = self.last_event
 
         return wd, index, head, status, event
+
+    def _resolve_ref(self, ref: str):
+        if ref == "HEAD":
+            return self.repo.head
+
+        branches = self.repo.list_branches()
+        if ref in branches:
+            return branches[ref]
+
+        raise ValueError(f"Unknown ref: {ref}")

@@ -38,3 +38,27 @@ def test_timeline_navigator_clamps_bounds():
 
     nav.move_down()
     assert nav.index == len(stepper.snapshots) - 1
+
+
+def test_scenario_stepper_keeps_log_and_show_outputs_per_step():
+    stepper = ScenarioStepper.from_payload(
+        {
+            "commands": [
+                {"cmd": "write", "filename": "a.txt", "content": "1"},
+                {"cmd": "add", "filename": "a.txt"},
+                {"cmd": "commit"},
+                {"cmd": "log"},
+                {"cmd": "show", "ref": "HEAD"},
+            ]
+        }
+    )
+
+    log_snap = stepper.snapshots[3]
+    show_snap = stepper.snapshots[4]
+
+    assert log_snap.event_type == "log"
+    assert len(log_snap.log_lines) == 1
+    assert log_snap.log_lines[0].startswith("commit ")
+
+    assert show_snap.event_type == "show"
+    assert show_snap.show_snapshot == {"a.txt": "1"}

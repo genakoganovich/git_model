@@ -146,6 +146,8 @@ class GitSimWindow:
                 current_branch=snap.current_branch,
                 head=snap.head,
                 event_type=snap.event_type,
+                log_lines=snap.log_lines,
+                show_snapshot=snap.show_snapshot,
             ),
         )
         self._set_text(
@@ -187,12 +189,23 @@ def _format_repository_text(
     current_branch: str,
     head: dict[str, str],
     event_type: str | None,
+    log_lines: list[str],
+    show_snapshot: dict[str, str],
 ) -> str:
     lines = [f"branch: {current_branch}", ""]
     lines.append("HEAD snapshot:")
     lines.append(_format_mapping(head))
     lines.append("")
     lines.append(f"event: {event_type or '-'}")
+    lines.append("")
+    lines.append("log:")
+    if log_lines:
+        lines.extend(log_lines)
+    else:
+        lines.append("(empty)")
+    lines.append("")
+    lines.append("show:")
+    lines.append(_format_mapping(show_snapshot))
     return "\n".join(lines)
 
 

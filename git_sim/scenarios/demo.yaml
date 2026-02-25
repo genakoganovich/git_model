@@ -19,3 +19,7 @@ commands:
   - cmd: add
     filename: a.txt
   - cmd: commit
+
+  - cmd: log
+  - cmd: show
+    ref: HEAD
