@@ -68,6 +68,9 @@ def test_event_factories_produce_expected_payloads():
     assert GitEvent.show("HEAD") == GitEvent(
         type="show", source="repository", target="repository", filename="HEAD"
     )
+    assert GitEvent.unstage("a.txt") == GitEvent(
+        type="unstage", source="index", target="working_dir", filename="a.txt"
+    )
 
 
 def test_log_generates_event():
@@ -89,3 +92,17 @@ def test_show_generates_event():
     assert event.source == "repository"
     assert event.target == "repository"
     assert event.filename == "HEAD"
+
+
+def test_unstage_generates_event():
+    git = GitService()
+    git.working_dir.write("a.txt", "1")
+    git.add("a.txt")
+
+    git.unstage("a.txt")
+
+    event = git.last_event
+    assert event.type == "unstage"
+    assert event.source == "index"
+    assert event.target == "working_dir"
+    assert event.filename == "a.txt"

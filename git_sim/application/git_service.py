@@ -27,6 +27,21 @@ class GitService:
 
         self.last_event = GitEvent.add(filename)
 
+    def unstage(self, filename: str):
+        index_snapshot = self.index.snapshot()
+        if filename not in index_snapshot:
+            self.last_event = GitEvent.unstage(filename)
+            return
+
+        head_snapshot = self.repo.head.snapshot if self.repo.head else {}
+        if filename in head_snapshot:
+            index_snapshot[filename] = head_snapshot[filename]
+        else:
+            index_snapshot.pop(filename, None)
+
+        self._replace_index(index_snapshot)
+        self.last_event = GitEvent.unstage(filename)
+
     def commit(self):
         snapshot = self.index.snapshot()
 
@@ -117,3 +132,9 @@ class GitService:
             return branches[ref]
 
         raise ValueError(f"Unknown ref: {ref}")
+
+    def _replace_index(self, snapshot: dict[str, str]):
+        new_index = Index()
+        for filename, content in snapshot.items():
+            new_index.add(filename, content)
+        self.index = new_index

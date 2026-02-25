@@ -259,6 +259,8 @@ def _format_command(command: dict[str, object]) -> str:
         return f"write {command.get('filename', '?')}"
     if cmd == "add":
         return f"add {command.get('filename', '?')}"
+    if cmd in {"unstage", "restore_staged"}:
+        return f"unstage {command.get('filename', '?')}"
     if cmd in {"branch", "checkout"}:
         return f"{cmd} {command.get('name', '?')}"
     return str(cmd)

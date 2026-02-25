@@ -8,7 +8,7 @@ def test_scenario_stepper_builds_snapshot_per_command():
 
     stepper = ScenarioStepper.from_file(scenario)
 
-    assert len(stepper.snapshots) == 9
+    assert len(stepper.snapshots) == 11
     assert stepper.snapshots[-1].current_branch == "feature"
     assert stepper.snapshots[-1].head == {"a.txt": "feature-v2"}
 
@@ -62,3 +62,23 @@ def test_scenario_stepper_keeps_log_and_show_outputs_per_step():
 
     assert show_snap.event_type == "show"
     assert show_snap.show_snapshot == {"a.txt": "1"}
+
+
+def test_scenario_stepper_tracks_unstage_effect():
+    stepper = ScenarioStepper.from_payload(
+        {
+            "commands": [
+                {"cmd": "write", "filename": "a.txt", "content": "v1"},
+                {"cmd": "add", "filename": "a.txt"},
+                {"cmd": "commit"},
+                {"cmd": "write", "filename": "a.txt", "content": "v2"},
+                {"cmd": "add", "filename": "a.txt"},
+                {"cmd": "unstage", "filename": "a.txt"},
+            ]
+        }
+    )
+
+    snap = stepper.snapshots[-1]
+    assert snap.event_type == "unstage"
+    assert snap.index == {"a.txt": "v1"}
+    assert snap.wd == {"a.txt": "v2"}

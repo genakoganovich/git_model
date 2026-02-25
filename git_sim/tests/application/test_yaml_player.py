@@ -42,3 +42,24 @@ def test_yaml_player_supports_log_and_show_commands():
     assert len(git.last_log) == 1
     assert git.last_log[0].startswith("commit ")
     assert git.last_show == {"a.txt": "1"}
+
+
+def test_yaml_player_supports_unstage_and_restore_staged_alias():
+    player = YamlCommandPlayer()
+
+    git = player.play(
+        {
+            "commands": [
+                {"cmd": "write", "filename": "a.txt", "content": "v1"},
+                {"cmd": "add", "filename": "a.txt"},
+                {"cmd": "commit"},
+                {"cmd": "write", "filename": "a.txt", "content": "v2"},
+                {"cmd": "add", "filename": "a.txt"},
+                {"cmd": "restore_staged", "filename": "a.txt"},
+                {"cmd": "unstage", "filename": "a.txt"},
+            ]
+        }
+    )
+
+    assert git.index.snapshot() == {"a.txt": "v1"}
+    assert git.working_dir.snapshot() == {"a.txt": "v2"}

@@ -140,3 +140,31 @@ def test_show_raises_for_unknown_ref():
         assert "Unknown ref" in str(exc)
     else:
         raise AssertionError("show should fail for unknown ref")
+
+
+def test_unstage_restores_index_version_from_head():
+    git = GitService()
+    git.working_dir.write("a.txt", "v1")
+    git.add("a.txt")
+    git.commit()
+
+    git.working_dir.write("a.txt", "v2")
+    git.add("a.txt")
+    git.unstage("a.txt")
+
+    assert git.index.snapshot() == {"a.txt": "v1"}
+    assert git.working_dir.snapshot() == {"a.txt": "v2"}
+    assert git.status().staged == []
+    assert git.status().modified == ["a.txt"]
+
+
+def test_unstage_removes_newly_staged_file_when_absent_in_head():
+    git = GitService()
+    git.working_dir.write("new.txt", "data")
+    git.add("new.txt")
+
+    git.unstage("new.txt")
+
+    assert git.index.snapshot() == {}
+    assert git.working_dir.snapshot() == {"new.txt": "data"}
+    assert git.status().untracked == ["new.txt"]

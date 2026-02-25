@@ -53,6 +53,11 @@ class YamlCommandPlayer:
             self.git.add(filename)
             return
 
+        if cmd in {"unstage", "restore_staged"}:
+            filename = _require_str(item, "filename")
+            self.git.unstage(filename)
+            return
+
         if cmd == "commit":
             self.git.commit()
             return
