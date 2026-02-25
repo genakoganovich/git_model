@@ -14,7 +14,7 @@ def test_yaml_player_runs_demo_scenario_and_updates_branch_heads():
     branches = git.repo.list_branches()
     assert git.repo.current_branch == "feature"
     assert branches["main"].snapshot == {"a.txt": "main-v1"}
-    assert branches["feature"].snapshot == {"a.txt": "feature-v2"}
+    assert branches["feature"].snapshot == {"a.txt": "feature-v3"}
 
 
 def test_yaml_player_rejects_unknown_command():

@@ -89,3 +89,29 @@ def test_repository_panel_renders_log_and_show_sections() -> None:
         assert "a.txt: 1" in repo_text
     finally:
         root.destroy()
+
+
+def test_status_panel_renders_unstage_hint() -> None:
+    stepper = ScenarioStepper.from_payload(
+        {
+            "commands": [
+                {"cmd": "write", "filename": "a.txt", "content": "v1"},
+                {"cmd": "add", "filename": "a.txt"},
+                {"cmd": "commit"},
+                {"cmd": "write", "filename": "a.txt", "content": "v2"},
+                {"cmd": "add", "filename": "a.txt"},
+                {"cmd": "unstage", "filename": "a.txt"},
+            ]
+        }
+    )
+    navigator = TimelineNavigator(stepper.snapshots)
+    navigator.set_index(5)
+
+    root = _make_root_or_skip()
+    try:
+        window = GitSimWindow(root, navigator)
+        status_text = window.status_text.get("1.0", "end-1c")
+
+        assert "last action: unstage a.txt (index -> working_dir)" in status_text
+    finally:
+        root.destroy()

@@ -156,6 +156,8 @@ class GitSimWindow:
                 untracked=snap.status_untracked,
                 staged=snap.status_staged,
                 modified=snap.status_modified,
+                event_type=snap.event_type,
+                command=snap.command,
             ),
         )
         self._set_text(
@@ -213,12 +215,23 @@ def _format_status_text(
     untracked: list[str],
     staged: list[str],
     modified: list[str],
+    event_type: str | None,
+    command: dict[str, object],
 ) -> str:
     lines = ["Status:", ""]
     lines.append(f"untracked: {sorted(untracked)}")
     lines.append(f"staged: {sorted(staged)}")
     lines.append(f"modified: {sorted(modified)}")
+    lines.append("")
+    lines.append(f"last action: {_format_event_hint(event_type, command)}")
     return "\n".join(lines)
+
+
+def _format_event_hint(event_type: str | None, command: dict[str, object]) -> str:
+    if event_type == "unstage":
+        filename = command.get("filename", "?")
+        return f"unstage {filename} (index -> working_dir)"
+    return event_type or "-"
 
 
 def _build_diff_text(head: dict[str, str], index: dict[str, str], wd: dict[str, str]) -> str:

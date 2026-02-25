@@ -8,9 +8,9 @@ def test_scenario_stepper_builds_snapshot_per_command():
 
     stepper = ScenarioStepper.from_file(scenario)
 
-    assert len(stepper.snapshots) == 11
+    assert len(stepper.snapshots) == 19
     assert stepper.snapshots[-1].current_branch == "feature"
-    assert stepper.snapshots[-1].head == {"a.txt": "feature-v2"}
+    assert stepper.snapshots[-1].head == {"a.txt": "feature-v3"}
 
 
 def test_scenario_stepper_tracks_checkout_state():

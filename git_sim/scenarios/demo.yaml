@@ -20,6 +20,25 @@ commands:
     filename: a.txt
   - cmd: commit
 
+  - cmd: write
+    filename: a.txt
+    content: "feature-v3"
+  - cmd: add
+    filename: a.txt
+  - cmd: restore_staged
+    filename: a.txt
+  - cmd: add
+    filename: a.txt
+  - cmd: commit
+
+  - cmd: write
+    filename: b.txt
+    content: "temp"
+  - cmd: add
+    filename: b.txt
+  - cmd: unstage
+    filename: b.txt
+
   - cmd: log
   - cmd: show
     ref: HEAD
